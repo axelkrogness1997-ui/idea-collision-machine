@@ -36,7 +36,7 @@ function App() {
   const [seenChallenges, setSeenChallenges] = useState<string[]>([])
 
   async function generateChallenge() {
-    const response = await fetch('http://localhost:3001/api/challenge', {
+    const response = await fetch('https://idea-collision-machine.onrender.com/api/challenge', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ function App() {
   }
 
   async function remixChallenge(savedChallenge: SavedChallenge) {
-    const response = await fetch('http://localhost:3001/api/challenge', {
+    const response = await fetch('https://idea-collision-machine.onrender.com/api/challenge', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
