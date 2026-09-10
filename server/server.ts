@@ -1,19 +1,26 @@
-const express = require('express')
-const cors = require('cors')
+import express, { type Request, type Response } from 'express'
+import cors from 'cors'
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello from the Idea Collision API!' })
 })
 
-app.post('/api/challenge', (req, res) => {
-  const { category1, category2, seenChallenges = [] } = req.body
+app.post('/api/challenge', (req: Request, res: Response) => {
+const {
+  category1: rawCategory1,
+  category2: rawCategory2,
+  seenChallenges = [],
+} = req.body
 
-  let challenges = []
+const category1 = rawCategory1?.trim()
+const category2 = rawCategory2?.trim()
+
+let challenges = []
 
   if (category1 === 'Healthcare' && category2 === 'AI') {
     challenges = [
@@ -144,9 +151,13 @@ app.post('/api/challenge', (req, res) => {
       'Design a service that connects farmers with sustainable investment opportunities.'
     ]
   } else {
-    return res.json({
-      challenge: 'Choose two categories to create a collision.'
-    })
+    challenges = [
+      `Create a ${category1} project inspired by ${category2}.`,
+      `Design a tool that combines ${category1} with ${category2}.`,
+      `Imagine how ${category2} could transform a ${category1} experience.`,
+      `Create an unexpected solution by combining ${category1} and ${category2}.`,
+      `Design a new product that brings ${category1} and ${category2} together.`
+    ]
   }
 
   const availableChallenges = challenges.filter(

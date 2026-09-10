@@ -1,40 +1,64 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 type SavedChallenge = {
+  id: number
   challenge: string
   category1: string
   category2: string
 }
 
 const API_URL = 'https://idea-collision-machine.onrender.com/api/challenge'
+const AUTH_API_URL = 'http://127.0.0.1:8000'
 
 const categories1 = ['Healthcare', 'Gaming', 'Education', 'Finance']
 const categories2 = ['Agriculture', 'AI', 'Maps', 'Accessibility']
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showAuthScreen, setShowAuthScreen] = useState(false)
+  const [currentUsername, setCurrentUsername] = useState('')
+  useEffect(() => {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) return
+
+  fetch(`${AUTH_API_URL}/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Invalid session')
+      }
+
+      return response.json()
+    })
+    .then((user) => {
+  setCurrentUsername(user.username)
+  setIsAuthenticated(true)
+})
+    .catch(() => {
+      localStorage.removeItem('access_token')
+      setIsAuthenticated(false)
+    })
+}, [])
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
   const [category1, setCategory1] = useState('')
   const [category2, setCategory2] = useState('')
+  const [customCategory1, setCustomCategory1] = useState('')
+  const [customCategory2, setCustomCategory2] = useState('')
   const [challenge, setChallenge] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const [savedChallenges, setSavedChallenges] = useState<SavedChallenge[]>(() => {
-    try {
-      const saved = localStorage.getItem('savedChallenges')
-      if (!saved) return []
-
-      const parsed = JSON.parse(saved)
-
-      return parsed.map((item: string | SavedChallenge) =>
-        typeof item === 'string'
-          ? { challenge: item, category1: '', category2: '' }
-          : item
-      )
-    } catch {
-      return []
-    }
-  })
+  const [savedChallenges, setSavedChallenges] = useState<SavedChallenge[]>([])
 
   const [seenChallenges, setSeenChallenges] = useState<string[]>([])
 
@@ -51,13 +75,113 @@ function App() {
     return categories.size
   }, [savedChallenges])
 
-  function saveChallenges(challenges: SavedChallenge[]) {
-    setSavedChallenges(challenges)
-    localStorage.setItem('savedChallenges', JSON.stringify(challenges))
-  }
+  const savedCategoryCounts = useMemo(() => {
+  const counts: Record<string, number> = {}
 
+  savedChallenges.forEach((item) => {
+    if (item.category1) {
+      counts[item.category1] = (counts[item.category1] || 0) + 1
+    }
+
+    if (item.category2) {
+      counts[item.category2] = (counts[item.category2] || 0) + 1
+    }
+  })
+
+  return Object.entries(counts)
+}, [savedChallenges])
+
+  function saveChallenges(challenges: SavedChallenge[]) {
+  setSavedChallenges(challenges)
+}
+
+    async function handleAuth() {
+    setAuthLoading(true)
+    setAuthError('')
+
+    try {
+      if (authMode === 'register') {
+        const registerResponse = await fetch(
+          `${AUTH_API_URL}/auth/register`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username,
+              email,
+              password,
+            }),
+          }
+        )
+
+        if (!registerResponse.ok) {
+          const data = await registerResponse.json()
+          throw new Error(data.detail || 'Registration failed.')
+        }
+      }
+
+      const loginBody = new URLSearchParams()
+      loginBody.append('username', username)
+      loginBody.append('password', password)
+
+      const loginResponse = await fetch(
+        `${AUTH_API_URL}/auth/login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: loginBody,
+        }
+      )
+
+      if (!loginResponse.ok) {
+        const data = await loginResponse.json()
+        throw new Error(data.detail || 'Login failed.')
+      }
+
+      const data = await loginResponse.json()
+
+localStorage.setItem('access_token', data.access_token)
+
+const meResponse = await fetch(`${AUTH_API_URL}/auth/me`, {
+  headers: {
+    Authorization: `Bearer ${data.access_token}`,
+  },
+})
+
+if (!meResponse.ok) {
+  throw new Error('Unable to load your account.')
+}
+
+const user = await meResponse.json()
+
+setCurrentUsername(user.username)
+setIsAuthenticated(true)
+setChallenge('')
+setCategory1('')
+setCategory2('')
+setSeenChallenges([])
+setError('')
+loadSavedChallenges()
+setAuthError('')
+    } catch (error) {
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong.'
+      )
+    } finally {
+      setAuthLoading(false)
+    }
+  }
   async function generateChallenge() {
-    if (!category1 || !category2 || loading) return
+    const selectedCategory1 = category1.trim()
+const selectedCategory2 = category2.trim()
+
+if (!selectedCategory1 || !selectedCategory2 || loading) return
 
     setLoading(true)
     setError('')
@@ -149,33 +273,110 @@ function App() {
     setSeenChallenges([])
   }
 
-  function saveCurrentChallenge() {
-    if (!challenge || !category1 || !category2) return
+async function loadSavedChallenges() {
+  const token = localStorage.getItem('access_token')
 
-    const alreadySaved = savedChallenges.some(
-      (item) =>
-        item.challenge === challenge &&
-        item.category1 === category1 &&
-        item.category2 === category2
-    )
+  if (!token) return
 
-    if (alreadySaved) return
+  try {
+    const response = await fetch(`${AUTH_API_URL}/challenges`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
 
-    saveChallenges([
-      ...savedChallenges,
-      {
+    if (!response.ok) {
+      throw new Error('Failed to load saved challenges')
+    }
+
+    const data = await response.json()
+
+    setSavedChallenges(data)
+  } catch (error) {
+    console.error('Error loading saved challenges:', error)
+  }
+}
+
+  async function saveCurrentChallenge() {
+  if (!challenge || !category1 || !category2) return
+
+  const alreadySaved = savedChallenges.some(
+    (item) =>
+      item.challenge === challenge &&
+      item.category1 === category1 &&
+      item.category2 === category2
+  )
+
+  if (alreadySaved) return
+
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+  setShowAuthScreen(true)
+  return
+}
+
+  try {
+    const response = await fetch(`${AUTH_API_URL}/challenges/save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
         challenge,
         category1,
         category2,
-      },
-    ])
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save challenge')
+    }
+
+    const data = await response.json()
+
+saveChallenges([
+  ...savedChallenges,
+  {
+    id: data.id,
+    challenge,
+    category1,
+    category2,
+  },
+])
+
+  } catch (error) {
+    console.error('Error saving challenge:', error)
+  }
+}
+
+async function deleteChallenge(id: number) {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    return
   }
 
-  function deleteChallenge(index: number) {
+  try {
+    const response = await fetch(`${AUTH_API_URL}/challenges/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete challenge')
+    }
+
     saveChallenges(
-      savedChallenges.filter((_, challengeIndex) => challengeIndex !== index)
+      savedChallenges.filter((item) => item.id !== id)
     )
+  } catch (error) {
+    console.error('Error deleting challenge:', error)
   }
+}
 
   function newRound() {
     setChallenge('')
@@ -183,17 +384,153 @@ function App() {
     setSeenChallenges([])
   }
 
+function logout() {
+  localStorage.removeItem('access_token')
+  setCurrentUsername('')
+  setIsAuthenticated(false)
+  setSavedChallenges([])
+  setChallenge('')
+  setCategory1('')
+  setCategory2('')
+  setSeenChallenges([])
+  setError('')
+}
+
+    function renderAuthScreen() {
+    return (
+      <main className="auth-screen">
+        <div className="auth-card">
+          <div className="brand-mark">✦</div>
+
+          <p className="eyebrow">IDEA COLLISION MACHINE</p>
+
+          <h1>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
+
+          <p className="auth-subtitle">
+            {authMode === 'login'
+              ? 'Log in to continue creating unexpected ideas.'
+              : 'Create an account to save your creative collisions.'}
+          </p>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              handleAuth()
+            }}
+          >
+            <label>
+              Username
+              <input
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                required
+              />
+            </label>
+
+            {authMode === 'register' && (
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                />
+              </label>
+            )}
+
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </label>
+
+            {authError && (
+              <p className="auth-error" role="alert">
+                {authError}
+              </p>
+            )}
+
+            <button
+              className="auth-button"
+              type="submit"
+              disabled={authLoading}
+            >
+              {authLoading
+                ? 'Please wait…'
+                : authMode === 'login'
+                  ? 'Log in'
+                  : 'Create account'}
+            </button>
+          </form>
+
+          <button
+  className="auth-switch"
+  type="button"
+  onClick={() => {
+    setAuthMode(authMode === 'login' ? 'register' : 'login')
+    setAuthError('')
+  }}
+>
+  {authMode === 'login'
+    ? 'Need an account? Create one'
+    : 'Already have an account? Log in'}
+</button>
+
+<button
+  className="auth-switch"
+  type="button"
+  onClick={() => setShowAuthScreen(false)}
+>
+  Go back without signing in
+</button>
+        </div>
+      </main>
+    )
+  }
+    if (showAuthScreen && !isAuthenticated) {
+  return renderAuthScreen()
+}
   return (
     <main className="app-shell">
+      <video
+  className="background-video"
+  autoPlay
+  muted
+  loop
+  playsInline
+  aria-hidden="true"
+>
+  <source src="/Planets.mp4" type="video/mp4" />
+</video>
       <header className="hero">
+        <div className="account-bar">
+  {isAuthenticated ? (
+    <>
+      <span>Logged in as {currentUsername}</span>
+      <button type="button" onClick={logout}>
+        Log out
+      </button>
+    </>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setShowAuthScreen(true)}
+    >
+      Sign in
+    </button>
+  )}
+</div>
         <div className="brand-mark">✦</div>
 
         <p className="eyebrow">CREATIVE IDEA GENERATOR</p>
 
-        <h1>
-          Idea Collision
-          <span>Machine</span>
-        </h1>
+        <h1>Idea Collision Machine</h1>
 
         <p className="hero-text">
           Combine unrelated worlds and discover unexpected project ideas.
@@ -237,6 +574,19 @@ function App() {
                 </button>
               ))}
             </div>
+            <input
+  type="text"
+  className="custom-category-input"
+  placeholder="Or enter your own idea…"
+  value={customCategory1}
+  onChange={(event) => {
+    setCustomCategory1(event.target.value)
+    setCategory1(event.target.value)
+    setChallenge('')
+    setError('')
+    setSeenChallenges([])
+  }}
+/>
           </section>
 
           <div className="collision-symbol" aria-hidden="true">
@@ -267,6 +617,19 @@ function App() {
                 </button>
               ))}
             </div>
+            <input
+  type="text"
+  className="custom-category-input"
+  placeholder="Or enter your own idea…"
+  value={customCategory2}
+  onChange={(event) => {
+    setCustomCategory2(event.target.value)
+    setCategory2(event.target.value)
+    setChallenge('')
+    setError('')
+    setSeenChallenges([])
+  }}
+/>
           </section>
         </div>
 
@@ -286,7 +649,7 @@ function App() {
           <button
             className="collision-button"
             onClick={generateChallenge}
-            disabled={!category1 || !category2 || loading}
+            disabled={!category1.trim() || !category2.trim() || loading}
           >
             {loading ? 'Creating…' : 'Create Collision'}
             {!loading && <span>↗</span>}
@@ -313,6 +676,28 @@ function App() {
             </div>
 
             <h2>{challenge}</h2>
+            <div className="visual-concept">
+  <p className="section-label">03 — VISUAL CONCEPT</p>
+
+  <div className="visual-worlds">
+    <div className="visual-world">
+      <span className="visual-icon">◉</span>
+      <strong>{category1}</strong>
+    </div>
+
+    <div className="visual-connector">×</div>
+
+    <div className="visual-world">
+      <span className="visual-icon">✦</span>
+      <strong>{category2}</strong>
+    </div>
+  </div>
+
+  <div className="visual-idea">
+    <span>IDEA</span>
+    <p>{challenge}</p>
+  </div>
+</div>
 
             <div className="challenge-actions">
               <button
@@ -351,6 +736,41 @@ function App() {
         </div>
       </section>
 
+      {savedCategoryCounts.length > 0 && (
+  <section className="activity-section">
+    <div className="section-heading">
+      <div>
+        <p className="section-label">04 — YOUR ACTIVITY</p>
+        <h2>Worlds behind your ideas</h2>
+      </div>
+
+      <p className="section-description">
+        See which worlds appear most often in your saved ideas.
+      </p>
+    </div>
+
+    <div className="activity-chart">
+      {savedCategoryCounts.map(([category, count]) => (
+        <div className="chart-row" key={category}>
+          <div className="chart-label">
+            <span>{category}</span>
+            <strong>{count}</strong>
+          </div>
+
+          <div className="chart-track">
+            <div
+              className="chart-bar"
+              style={{
+                width: `${(count / Math.max(...savedCategoryCounts.map(([, value]) => value))) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
       {savedChallenges.length > 0 && (
         <section className="saved-section">
           <div className="section-heading">
@@ -372,12 +792,12 @@ function App() {
                   </span>
 
                   <button
-                    className="delete-button"
-                    onClick={() => deleteChallenge(index)}
-                    aria-label="Delete saved challenge"
-                  >
-                    ×
-                  </button>
+                  className="delete-button"
+                  onClick={() => deleteChallenge(savedChallenge.id)}
+                  aria-label={`Delete saved challenge: ${savedChallenge.challenge}`}
+                >
+                  ×
+                </button>
                 </div>
 
                 <p>{savedChallenge.challenge}</p>
