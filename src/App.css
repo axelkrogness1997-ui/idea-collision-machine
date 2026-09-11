@@ -6,7 +6,6 @@
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-
   color: #172033;
   background: #f4f1ea;
   font-synthesis: none;
@@ -32,6 +31,9 @@ body {
 .app-shell {
   position: relative;
   z-index: 1;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 70px 0 35px;
 }
 
 button {
@@ -43,11 +45,7 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
-.app-shell {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 70px 0 35px;
-}
+/* HERO */
 
 .hero {
   max-width: 800px;
@@ -105,6 +103,8 @@ button:focus-visible {
   line-height: 1.6;
 }
 
+/* WORKSPACE */
+
 .workspace,
 .saved-section {
   border-top: 1px solid #d8d4cc;
@@ -132,6 +132,8 @@ button:focus-visible {
   color: beige;
   line-height: 1.5;
 }
+
+/* CATEGORY CARDS */
 
 .category-grid {
   position: relative;
@@ -182,11 +184,15 @@ button:focus-visible {
   gap: 10px;
 }
 
+/* PREDETERMINED CATEGORY BUTTONS */
+
 .category-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  height: 50px;
+  min-height: 50px;
   padding: 15px 17px;
   border: 1px solid #ddd9d1;
   border-radius: 12px;
@@ -194,6 +200,9 @@ button:focus-visible {
   color: beige;
   cursor: pointer;
   text-align: left;
+  font: inherit;
+  line-height: 18px;
+  box-sizing: border-box;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -220,6 +229,56 @@ button:focus-visible {
   opacity: 1;
 }
 
+/* CUSTOM CATEGORY INPUTS */
+
+.custom-category-wrapper {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.custom-category-input {
+  display: block;
+  width: 100%;
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  margin: 0;
+  padding: 15px 17px;
+  border: 1px solid #ddd9d1;
+  border-radius: 12px;
+  background: black;
+  color: beige;
+  cursor: text;
+  font: inherit;
+  font-size: 16px;
+  line-height: 18px;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.custom-category-input::placeholder {
+  color: beige;
+  opacity: 0.65;
+}
+
+.custom-category-input:hover {
+  border-color: #aaa3ff;
+}
+
+.custom-category-input:focus {
+  border-color: #7c5cff;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.12);
+}
+
+/* COLLISION SYMBOL */
+
 .collision-symbol {
   display: flex;
   align-items: center;
@@ -237,6 +296,8 @@ button:focus-visible {
   color: #fff;
   font-size: 27px;
 }
+
+/* COLLISION PREVIEW */
 
 .collision-preview {
   display: grid;
@@ -283,7 +344,9 @@ button:focus-visible {
   color: white;
   font-weight: 750;
   cursor: pointer;
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
 }
 
 .collision-button:hover:not(:disabled) {
@@ -295,6 +358,8 @@ button:focus-visible {
   opacity: 0.4;
 }
 
+/* ERROR */
+
 .error-message {
   margin-top: 18px;
   padding: 15px 18px;
@@ -303,6 +368,8 @@ button:focus-visible {
   color: #a83c2d;
   font-size: 14px;
 }
+
+/* CHALLENGE */
 
 .challenge-card {
   margin-top: 30px;
@@ -374,6 +441,8 @@ button:focus-visible {
   color: #fff;
 }
 
+/* STATS */
+
 .stats-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -406,6 +475,8 @@ button:focus-visible {
   color: beige;
   font-size: 13px;
 }
+
+/* SAVED */
 
 .saved-section {
   margin-top: 30px;
@@ -480,6 +551,8 @@ button:focus-visible {
   cursor: pointer;
 }
 
+/* FOOTER */
+
 footer {
   display: flex;
   justify-content: space-between;
@@ -491,89 +564,7 @@ footer {
   font-size: 12px;
 }
 
-@media (max-width: 800px) {
-  .app-shell {
-    padding-top: 40px;
-  }
-
-  .hero {
-    margin-bottom: 45px;
-  }
-
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .collision-symbol {
-    margin: -4px 0;
-  }
-
-  .collision-preview {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-plus {
-    display: none;
-  }
-
-  .collision-button {
-    justify-content: center;
-  }
-
-  .section-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .stats-section {
-    grid-template-columns: 1fr;
-  }
-
-  .stat {
-    border-right: 0;
-    border-bottom: 1px solid #d8d4cc;
-  }
-
-  .stat:last-child {
-    border-bottom: 0;
-  }
-
-  .saved-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .challenge-card {
-    padding: 28px 22px;
-  }
-
-  footer {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-shell {
-    width: min(100% - 20px, 1180px);
-  }
-
-  .hero h1 {
-    font-size: 48px;
-  }
-
-  .category-card {
-    padding: 20px;
-  }
-
-  .challenge-actions {
-    flex-direction: column;
-  }
-
-  .primary-action,
-  .secondary-action {
-    width: 100%;
-  }
-}
+/* AUTH */
 
 .auth-screen {
   min-height: 100vh;
@@ -702,6 +693,8 @@ footer {
   color: beige;
 }
 
+/* ACTIVITY */
+
 .activity-section {
   margin-top: 3rem;
 }
@@ -752,73 +745,304 @@ footer {
   transition: width 0.4s ease;
 }
 
+/* VISUAL CONCEPT */
+
 .visual-concept {
-  margin-top: 1.75rem;
+  margin-top: 2rem;
   padding: 1.5rem;
-  border-radius: 1.25rem;
-  background: rgba(0, 0, 0, 0.04);
-  color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
 }
 
-.visual-worlds {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
+.visual-concept-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-bottom: 1.25rem;
 }
 
-.visual-world {
-  min-height: 120px;
+.visual-concept-header h3 {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+}
+
+.visual-live {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.visual-canvas {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.18),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(255, 255, 255, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(255, 255, 255, 0.08),
+      transparent 30%
+    ),
+    rgba(0, 0, 0, 0.28);
+}
+
+.visual-orb {
+  position: absolute;
+  width: 125px;
+  height: 125px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  text-align: center;
-}
-
-.visual-icon {
-  width: 3rem;
-  height: 3rem;
-  display: grid;
-  place-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
-  background: #000;
-  color: #fff;
-  font-size: 1.4rem;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  z-index: 3;
 }
 
-.visual-connector {
+.visual-orb span {
   font-size: 1.5rem;
-  font-weight: 800;
 }
 
-.visual-idea {
-  margin-top: 1rem;
-  padding: 1.25rem;
-  border-radius: 1rem;
-  background: #000;
-  color: #fff;
+.visual-orb strong {
+  max-width: 95px;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
-.visual-idea span {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+.visual-orb-a {
+  left: 8%;
+  top: 18%;
+  animation: visualFloatA 4s ease-in-out infinite;
+}
+
+.visual-orb-b {
+  right: 8%;
+  bottom: 18%;
+  animation: visualFloatB 4.5s ease-in-out infinite;
+}
+
+.visual-energy {
+  position: relative;
+  z-index: 5;
+  width: 92px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 45px rgba(255, 255, 255, 0.18);
+}
+
+.visual-energy span {
+  font-size: 2.2rem;
+  font-weight: 300;
+}
+
+.visual-pulse {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: visualPulse 3s ease-out infinite;
+}
+
+.visual-pulse-two {
+  animation-delay: 1.5s;
+}
+
+.visual-result {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  width: min(80%, 600px);
+  transform: translateX(-50%);
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  text-align: center;
+  z-index: 6;
+}
+
+.visual-result span {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
   opacity: 0.65;
 }
 
-.visual-idea p {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.6;
+.visual-result p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.visual-caption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.visual-caption strong {
+  opacity: 1;
+}
+
+/* ANIMATIONS */
+
+@keyframes visualFloatA {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes visualFloatB {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes visualPulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+  .app-shell {
+    padding-top: 40px;
+  }
+
+  .hero {
+    margin-bottom: 45px;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collision-symbol {
+    margin: -4px 0;
+  }
+
+  .collision-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-plus {
+    display: none;
+  }
+
+  .collision-button {
+    justify-content: center;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stats-section {
+    grid-template-columns: 1fr;
+  }
+
+  .stat {
+    border-right: 0;
+    border-bottom: 1px solid #d8d4cc;
+  }
+
+  .stat:last-child {
+    border-bottom: 0;
+  }
+
+  .saved-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-card {
+    padding: 28px 22px;
+  }
+
+  footer {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 700px) {
+  .visual-canvas {
+    min-height: 320px;
+  }
+
+  .visual-orb {
+    width: 100px;
+    height: 100px;
+  }
+
+  .visual-orb-a {
+    left: 4%;
+  }
+
+  .visual-orb-b {
+    right: 4%;
+  }
+
+  .visual-energy {
+    width: 75px;
+    height: 75px;
+  }
+
+  .visual-result {
+    width: 88%;
+  }
 }
 
 @media (max-width: 600px) {
@@ -828,5 +1052,28 @@ footer {
 
   .visual-connector {
     transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-shell {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .category-card {
+    padding: 20px;
+  }
+
+  .challenge-actions {
+    flex-direction: column;
+  }
+
+  .primary-action,
+  .secondary-action {
+    width: 100%;
   }
 }

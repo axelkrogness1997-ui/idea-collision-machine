@@ -8,7 +8,6 @@ type SavedChallenge = {
   category2: string
 }
 
-const API_URL = 'https://idea-collision-machine.onrender.com/api/challenge'
 const AUTH_API_URL = 'http://127.0.0.1:8000'
 
 const categories1 = ['Healthcare', 'Gaming', 'Education', 'Finance']
@@ -18,48 +17,55 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showAuthScreen, setShowAuthScreen] = useState(false)
   const [currentUsername, setCurrentUsername] = useState('')
+
   useEffect(() => {
-  const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('access_token')
 
-  if (!token) return
+    if (!token) return
 
-  fetch(`${AUTH_API_URL}/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Invalid session')
-      }
-
-      return response.json()
+    fetch(`${AUTH_API_URL}/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-    .then((user) => {
-  setCurrentUsername(user.username)
-  setIsAuthenticated(true)
-})
-    .catch(() => {
-      localStorage.removeItem('access_token')
-      setIsAuthenticated(false)
-    })
-}, [])
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Invalid session')
+        }
+
+        return response.json()
+      })
+      .then((user) => {
+        setCurrentUsername(user.username)
+        setIsAuthenticated(true)
+      })
+      .catch(() => {
+        localStorage.removeItem('access_token')
+        setIsAuthenticated(false)
+      })
+  }, [])
+
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
+
   const [category1, setCategory1] = useState('')
   const [category2, setCategory2] = useState('')
   const [customCategory1, setCustomCategory1] = useState('')
   const [customCategory2, setCustomCategory2] = useState('')
+
   const [challenge, setChallenge] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const [savedChallenges, setSavedChallenges] = useState<SavedChallenge[]>([])
+  const API_URL = import.meta.env.PROD
+    ? 'https://idea-collision-machine.onrender.com/api/challenge'
+    : 'http://localhost:3001/api/challenge'
 
+  const [savedChallenges, setSavedChallenges] = useState<SavedChallenge[]>([])
   const [seenChallenges, setSeenChallenges] = useState<string[]>([])
 
   const savedCount = savedChallenges.length
@@ -76,26 +82,26 @@ function App() {
   }, [savedChallenges])
 
   const savedCategoryCounts = useMemo(() => {
-  const counts: Record<string, number> = {}
+    const counts: Record<string, number> = {}
 
-  savedChallenges.forEach((item) => {
-    if (item.category1) {
-      counts[item.category1] = (counts[item.category1] || 0) + 1
-    }
+    savedChallenges.forEach((item) => {
+      if (item.category1) {
+        counts[item.category1] = (counts[item.category1] || 0) + 1
+      }
 
-    if (item.category2) {
-      counts[item.category2] = (counts[item.category2] || 0) + 1
-    }
-  })
+      if (item.category2) {
+        counts[item.category2] = (counts[item.category2] || 0) + 1
+      }
+    })
 
-  return Object.entries(counts)
-}, [savedChallenges])
+    return Object.entries(counts)
+  }, [savedChallenges])
 
   function saveChallenges(challenges: SavedChallenge[]) {
-  setSavedChallenges(challenges)
-}
+    setSavedChallenges(challenges)
+  }
 
-    async function handleAuth() {
+  async function handleAuth() {
     setAuthLoading(true)
     setAuthError('')
 
@@ -144,29 +150,29 @@ function App() {
 
       const data = await loginResponse.json()
 
-localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('access_token', data.access_token)
 
-const meResponse = await fetch(`${AUTH_API_URL}/auth/me`, {
-  headers: {
-    Authorization: `Bearer ${data.access_token}`,
-  },
-})
+      const meResponse = await fetch(`${AUTH_API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      })
 
-if (!meResponse.ok) {
-  throw new Error('Unable to load your account.')
-}
+      if (!meResponse.ok) {
+        throw new Error('Unable to load your account.')
+      }
 
-const user = await meResponse.json()
+      const user = await meResponse.json()
 
-setCurrentUsername(user.username)
-setIsAuthenticated(true)
-setChallenge('')
-setCategory1('')
-setCategory2('')
-setSeenChallenges([])
-setError('')
-loadSavedChallenges()
-setAuthError('')
+      setCurrentUsername(user.username)
+      setIsAuthenticated(true)
+      setChallenge('')
+      setCategory1('')
+      setCategory2('')
+      setSeenChallenges([])
+      setError('')
+      loadSavedChallenges()
+      setAuthError('')
     } catch (error) {
       setAuthError(
         error instanceof Error
@@ -177,11 +183,12 @@ setAuthError('')
       setAuthLoading(false)
     }
   }
+
   async function generateChallenge() {
     const selectedCategory1 = category1.trim()
-const selectedCategory2 = category2.trim()
+    const selectedCategory2 = category2.trim()
 
-if (!selectedCategory1 || !selectedCategory2 || loading) return
+    if (!selectedCategory1 || !selectedCategory2 || loading) return
 
     setLoading(true)
     setError('')
@@ -225,7 +232,13 @@ if (!selectedCategory1 || !selectedCategory2 || loading) return
   }
 
   async function remixChallenge(savedChallenge: SavedChallenge) {
-    if (!savedChallenge.category1 || !savedChallenge.category2 || loading) return
+    if (
+      !savedChallenge.category1 ||
+      !savedChallenge.category2 ||
+      loading
+    ) {
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -261,6 +274,7 @@ if (!selectedCategory1 || !selectedCategory2 || loading) return
 
   function chooseCategory1(category: string) {
     setCategory1(category)
+    setCustomCategory1('')
     setChallenge('')
     setError('')
     setSeenChallenges([])
@@ -268,115 +282,118 @@ if (!selectedCategory1 || !selectedCategory2 || loading) return
 
   function chooseCategory2(category: string) {
     setCategory2(category)
+    setCustomCategory2('')
     setChallenge('')
     setError('')
     setSeenChallenges([])
   }
 
-async function loadSavedChallenges() {
-  const token = localStorage.getItem('access_token')
+  async function loadSavedChallenges() {
+    const token = localStorage.getItem('access_token')
 
-  if (!token) return
+    if (!token) return
 
-  try {
-    const response = await fetch(`${AUTH_API_URL}/challenges`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    try {
+      const response = await fetch(`${AUTH_API_URL}/challenges`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-    if (!response.ok) {
-      throw new Error('Failed to load saved challenges')
+      if (!response.ok) {
+        throw new Error('Failed to load saved challenges')
+      }
+
+      const data = await response.json()
+
+      setSavedChallenges(data)
+    } catch (error) {
+      console.error('Error loading saved challenges:', error)
     }
-
-    const data = await response.json()
-
-    setSavedChallenges(data)
-  } catch (error) {
-    console.error('Error loading saved challenges:', error)
   }
-}
 
   async function saveCurrentChallenge() {
-  if (!challenge || !category1 || !category2) return
+    if (!challenge || !category1 || !category2) return
 
-  const alreadySaved = savedChallenges.some(
-    (item) =>
-      item.challenge === challenge &&
-      item.category1 === category1 &&
-      item.category2 === category2
-  )
-
-  if (alreadySaved) return
-
-  const token = localStorage.getItem('access_token')
-
-  if (!token) {
-  setShowAuthScreen(true)
-  return
-}
-
-  try {
-    const response = await fetch(`${AUTH_API_URL}/challenges/save`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        challenge,
-        category1,
-        category2,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to save challenge')
-    }
-
-    const data = await response.json()
-
-saveChallenges([
-  ...savedChallenges,
-  {
-    id: data.id,
-    challenge,
-    category1,
-    category2,
-  },
-])
-
-  } catch (error) {
-    console.error('Error saving challenge:', error)
-  }
-}
-
-async function deleteChallenge(id: number) {
-  const token = localStorage.getItem('access_token')
-
-  if (!token) {
-    return
-  }
-
-  try {
-    const response = await fetch(`${AUTH_API_URL}/challenges/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to delete challenge')
-    }
-
-    saveChallenges(
-      savedChallenges.filter((item) => item.id !== id)
+    const alreadySaved = savedChallenges.some(
+      (item) =>
+        item.challenge === challenge &&
+        item.category1 === category1 &&
+        item.category2 === category2
     )
-  } catch (error) {
-    console.error('Error deleting challenge:', error)
+
+    if (alreadySaved) return
+
+    const token = localStorage.getItem('access_token')
+
+    if (!token) {
+      setShowAuthScreen(true)
+      return
+    }
+
+    try {
+      const response = await fetch(`${AUTH_API_URL}/challenges/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          challenge,
+          category1,
+          category2,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save challenge')
+      }
+
+      const data = await response.json()
+
+      saveChallenges([
+        ...savedChallenges,
+        {
+          id: data.id,
+          challenge,
+          category1,
+          category2,
+        },
+      ])
+    } catch (error) {
+      console.error('Error saving challenge:', error)
+    }
   }
-}
+
+  async function deleteChallenge(id: number) {
+    const token = localStorage.getItem('access_token')
+
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `${AUTH_API_URL}/challenges/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to delete challenge')
+      }
+
+      saveChallenges(
+        savedChallenges.filter((item) => item.id !== id)
+      )
+    } catch (error) {
+      console.error('Error deleting challenge:', error)
+    }
+  }
 
   function newRound() {
     setChallenge('')
@@ -384,19 +401,21 @@ async function deleteChallenge(id: number) {
     setSeenChallenges([])
   }
 
-function logout() {
-  localStorage.removeItem('access_token')
-  setCurrentUsername('')
-  setIsAuthenticated(false)
-  setSavedChallenges([])
-  setChallenge('')
-  setCategory1('')
-  setCategory2('')
-  setSeenChallenges([])
-  setError('')
-}
+  function logout() {
+    localStorage.removeItem('access_token')
+    setCurrentUsername('')
+    setIsAuthenticated(false)
+    setSavedChallenges([])
+    setChallenge('')
+    setCategory1('')
+    setCategory2('')
+    setCustomCategory1('')
+    setCustomCategory2('')
+    setSeenChallenges([])
+    setError('')
+  }
 
-    function renderAuthScreen() {
+  function renderAuthScreen() {
     return (
       <main className="auth-screen">
         <div className="auth-card">
@@ -404,7 +423,11 @@ function logout() {
 
           <p className="eyebrow">IDEA COLLISION MACHINE</p>
 
-          <h1>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
+          <h1>
+            {authMode === 'login'
+              ? 'Welcome back'
+              : 'Create your account'}
+          </h1>
 
           <p className="auth-subtitle">
             {authMode === 'login'
@@ -423,7 +446,9 @@ function logout() {
               <input
                 type="text"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={(event) =>
+                  setUsername(event.target.value)
+                }
                 required
               />
             </label>
@@ -434,7 +459,9 @@ function logout() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) =>
+                    setEmail(event.target.value)
+                  }
                   required
                 />
               </label>
@@ -445,7 +472,9 @@ function logout() {
               <input
                 type="password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
                 required
               />
             </label>
@@ -470,62 +499,69 @@ function logout() {
           </form>
 
           <button
-  className="auth-switch"
-  type="button"
-  onClick={() => {
-    setAuthMode(authMode === 'login' ? 'register' : 'login')
-    setAuthError('')
-  }}
->
-  {authMode === 'login'
-    ? 'Need an account? Create one'
-    : 'Already have an account? Log in'}
-</button>
+            className="auth-switch"
+            type="button"
+            onClick={() => {
+              setAuthMode(
+                authMode === 'login' ? 'register' : 'login'
+              )
+              setAuthError('')
+            }}
+          >
+            {authMode === 'login'
+              ? 'Need an account? Create one'
+              : 'Already have an account? Log in'}
+          </button>
 
-<button
-  className="auth-switch"
-  type="button"
-  onClick={() => setShowAuthScreen(false)}
->
-  Go back without signing in
-</button>
+          <button
+            className="auth-switch"
+            type="button"
+            onClick={() => setShowAuthScreen(false)}
+          >
+            Go back without signing in
+          </button>
         </div>
       </main>
     )
   }
-    if (showAuthScreen && !isAuthenticated) {
-  return renderAuthScreen()
-}
+
+  if (showAuthScreen && !isAuthenticated) {
+    return renderAuthScreen()
+  }
+
   return (
     <main className="app-shell">
       <video
-  className="background-video"
-  autoPlay
-  muted
-  loop
-  playsInline
-  aria-hidden="true"
->
-  <source src="/Planets.mp4" type="video/mp4" />
-</video>
+        className="background-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden="true"
+      >
+        <source src="/Planets.mp4" type="video/mp4" />
+      </video>
+
       <header className="hero">
         <div className="account-bar">
-  {isAuthenticated ? (
-    <>
-      <span>Logged in as {currentUsername}</span>
-      <button type="button" onClick={logout}>
-        Log out
-      </button>
-    </>
-  ) : (
-    <button
-      type="button"
-      onClick={() => setShowAuthScreen(true)}
-    >
-      Sign in
-    </button>
-  )}
-</div>
+          {isAuthenticated ? (
+            <>
+              <span>Logged in as {currentUsername}</span>
+
+              <button type="button" onClick={logout}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAuthScreen(true)}
+            >
+              Sign in
+            </button>
+          )}
+        </div>
+
         <div className="brand-mark">✦</div>
 
         <p className="eyebrow">CREATIVE IDEA GENERATOR</p>
@@ -540,7 +576,10 @@ function logout() {
       <section className="workspace">
         <div className="section-heading">
           <div>
-            <p className="section-label">01 — BUILD A COLLISION</p>
+            <p className="section-label">
+              01 — BUILD A COLLISION
+            </p>
+
             <h2>Choose two worlds</h2>
           </div>
 
@@ -553,9 +592,15 @@ function logout() {
           <section className="category-card">
             <div className="category-header">
               <span className="category-number">A</span>
+
               <div>
-                <span className="category-label">FIRST WORLD</span>
-                <h3>{category1 || 'Choose a category'}</h3>
+                <span className="category-label">
+                  FIRST WORLD
+                </span>
+
+                <h3>
+                  {category1 || 'Choose a category'}
+                </h3>
               </div>
             </div>
 
@@ -574,31 +619,43 @@ function logout() {
                 </button>
               ))}
             </div>
-            <input
-  type="text"
-  className="custom-category-input"
-  placeholder="Or enter your own idea…"
-  value={customCategory1}
-  onChange={(event) => {
-    setCustomCategory1(event.target.value)
-    setCategory1(event.target.value)
-    setChallenge('')
-    setError('')
-    setSeenChallenges([])
-  }}
-/>
+
+            <div className="custom-category-wrapper">
+              <input
+                type="text"
+                className="custom-category-input"
+                placeholder="Or enter your own idea…"
+                value={customCategory1}
+                onChange={(event) => {
+                  setCustomCategory1(event.target.value)
+                  setCategory1(event.target.value)
+                  setChallenge('')
+                  setError('')
+                  setSeenChallenges([])
+                }}
+              />
+            </div>
           </section>
 
-          <div className="collision-symbol" aria-hidden="true">
+          <div
+            className="collision-symbol"
+            aria-hidden="true"
+          >
             <span>×</span>
           </div>
 
           <section className="category-card">
             <div className="category-header">
               <span className="category-number">B</span>
+
               <div>
-                <span className="category-label">SECOND WORLD</span>
-                <h3>{category2 || 'Choose a category'}</h3>
+                <span className="category-label">
+                  SECOND WORLD
+                </span>
+
+                <h3>
+                  {category2 || 'Choose a category'}
+                </h3>
               </div>
             </div>
 
@@ -617,19 +674,22 @@ function logout() {
                 </button>
               ))}
             </div>
-            <input
-  type="text"
-  className="custom-category-input"
-  placeholder="Or enter your own idea…"
-  value={customCategory2}
-  onChange={(event) => {
-    setCustomCategory2(event.target.value)
-    setCategory2(event.target.value)
-    setChallenge('')
-    setError('')
-    setSeenChallenges([])
-  }}
-/>
+
+            <div className="custom-category-wrapper">
+              <input
+                type="text"
+                className="custom-category-input"
+                placeholder="Or enter your own idea…"
+                value={customCategory2}
+                onChange={(event) => {
+                  setCustomCategory2(event.target.value)
+                  setCategory2(event.target.value)
+                  setChallenge('')
+                  setError('')
+                  setSeenChallenges([])
+                }}
+              />
+            </div>
           </section>
         </div>
 
@@ -649,9 +709,14 @@ function logout() {
           <button
             className="collision-button"
             onClick={generateChallenge}
-            disabled={!category1.trim() || !category2.trim() || loading}
+            disabled={
+              !category1.trim() ||
+              !category2.trim() ||
+              loading
+            }
           >
             {loading ? 'Creating…' : 'Create Collision'}
+
             {!loading && <span>↗</span>}
           </button>
         </div>
@@ -666,7 +731,10 @@ function logout() {
           <section className="challenge-card">
             <div className="challenge-top">
               <div>
-                <p className="section-label">02 — YOUR COLLISION</p>
+                <p className="section-label">
+                  02 — YOUR COLLISION
+                </p>
+
                 <span className="collision-tag">
                   {category1} × {category2}
                 </span>
@@ -676,28 +744,6 @@ function logout() {
             </div>
 
             <h2>{challenge}</h2>
-            <div className="visual-concept">
-  <p className="section-label">03 — VISUAL CONCEPT</p>
-
-  <div className="visual-worlds">
-    <div className="visual-world">
-      <span className="visual-icon">◉</span>
-      <strong>{category1}</strong>
-    </div>
-
-    <div className="visual-connector">×</div>
-
-    <div className="visual-world">
-      <span className="visual-icon">✦</span>
-      <strong>{category2}</strong>
-    </div>
-  </div>
-
-  <div className="visual-idea">
-    <span>IDEA</span>
-    <p>{challenge}</p>
-  </div>
-</div>
 
             <div className="challenge-actions">
               <button
@@ -707,11 +753,17 @@ function logout() {
                 Save Challenge
               </button>
 
-              <button className="secondary-action" onClick={generateChallenge}>
+              <button
+                className="secondary-action"
+                onClick={generateChallenge}
+              >
                 Remix
               </button>
 
-              <button className="secondary-action" onClick={newRound}>
+              <button
+                className="secondary-action"
+                onClick={newRound}
+              >
                 New Round
               </button>
             </div>
@@ -737,80 +789,105 @@ function logout() {
       </section>
 
       {savedCategoryCounts.length > 0 && (
-  <section className="activity-section">
-    <div className="section-heading">
-      <div>
-        <p className="section-label">04 — YOUR ACTIVITY</p>
-        <h2>Worlds behind your ideas</h2>
-      </div>
+        <section className="activity-section">
+          <div className="section-heading">
+            <div>
+              <p className="section-label">
+                04 — YOUR ACTIVITY
+              </p>
 
-      <p className="section-description">
-        See which worlds appear most often in your saved ideas.
-      </p>
-    </div>
+              <h2>Worlds behind your ideas</h2>
+            </div>
 
-    <div className="activity-chart">
-      {savedCategoryCounts.map(([category, count]) => (
-        <div className="chart-row" key={category}>
-          <div className="chart-label">
-            <span>{category}</span>
-            <strong>{count}</strong>
+            <p className="section-description">
+              See which worlds appear most often in your saved ideas.
+            </p>
           </div>
 
-          <div className="chart-track">
-            <div
-              className="chart-bar"
-              style={{
-                width: `${(count / Math.max(...savedCategoryCounts.map(([, value]) => value))) * 100}%`,
-              }}
-            />
+          <div className="activity-chart">
+            {savedCategoryCounts.map(([category, count]) => (
+              <div className="chart-row" key={category}>
+                <div className="chart-label">
+                  <span>{category}</span>
+                  <strong>{count}</strong>
+                </div>
+
+                <div className="chart-track">
+                  <div
+                    className="chart-bar"
+                    style={{
+                      width: `${
+                        (count /
+                          Math.max(
+                            ...savedCategoryCounts.map(
+                              ([, value]) => value
+                            )
+                          )) *
+                        100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+        </section>
+      )}
 
       {savedChallenges.length > 0 && (
         <section className="saved-section">
           <div className="section-heading">
             <div>
-              <p className="section-label">03 — YOUR COLLECTION</p>
+              <p className="section-label">
+                03 — YOUR COLLECTION
+              </p>
+
               <h2>Saved challenges</h2>
             </div>
 
-            <span className="saved-count">{savedCount}</span>
+            <span className="saved-count">
+              {savedCount}
+            </span>
           </div>
 
           <div className="saved-grid">
-            {savedChallenges.map((savedChallenge, index) => (
-              <article className="saved-card" key={`${savedChallenge.challenge}-${index}`}>
-                <div className="saved-card-top">
-                  <span>
-                    {savedChallenge.category1 || 'Unknown'} ×{' '}
-                    {savedChallenge.category2 || 'Unknown'}
-                  </span>
+            {savedChallenges.map(
+              (savedChallenge, index) => (
+                <article
+                  className="saved-card"
+                  key={`${savedChallenge.challenge}-${index}`}
+                >
+                  <div className="saved-card-top">
+                    <span>
+                      {savedChallenge.category1 || 'Unknown'} ×{' '}
+                      {savedChallenge.category2 || 'Unknown'}
+                    </span>
+
+                    <button
+                      className="delete-button"
+                      onClick={() =>
+                        deleteChallenge(savedChallenge.id)
+                      }
+                      aria-label={`Delete saved challenge: ${savedChallenge.challenge}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <p>{savedChallenge.challenge}</p>
 
                   <button
-                  className="delete-button"
-                  onClick={() => deleteChallenge(savedChallenge.id)}
-                  aria-label={`Delete saved challenge: ${savedChallenge.challenge}`}
-                >
-                  ×
-                </button>
-                </div>
-
-                <p>{savedChallenge.challenge}</p>
-
-                <button
-                  className="remix-button"
-                  onClick={() => remixChallenge(savedChallenge)}
-                  disabled={loading}
-                >
-                  Remix idea →
-                </button>
-              </article>
-            ))}
+                    className="remix-button"
+                    onClick={() =>
+                      remixChallenge(savedChallenge)
+                    }
+                    disabled={loading}
+                  >
+                    Remix idea →
+                  </button>
+                </article>
+              )
+            )}
           </div>
         </section>
       )}
